@@ -11,8 +11,9 @@ library(readr)        # to import tabular data (e.g. csv)
 library(dplyr)        # to manipulate (tabular) data
 library(ggplot2)      # to visualize data
 library(sf)           # to handle spatial vector data
-library(terra)        # To handle raster data
-library(lubridate)    # To handle dates and times
+library(terra)        # to handle raster data
+library(lubridate)    # to handle dates and times
+library(zoo)          # moving window functions
 
 # Import data
 wildschwein <- read_delim("wildschwein_BE_2056.csv",",")
@@ -100,8 +101,52 @@ caro_9 <- caro_9 %>%
     steplength = sqrt((E-lead(E))^2+(N-lead(N))^2),
     speed = steplength/timelag_sec)
 
+# Plot 1
+ggplot() +
+  geom_point(data=caro, aes(E,N), colour="black") + 
+  geom_path(data=caro, aes(E,N), colour="black") +
+  geom_point(data=caro_3, aes(E,N), colour="blue") +
+  geom_path(data=caro_3, aes(E,N), colour="blue")
+  
+# Plot 2
+ggplot() +
+  geom_point(data=caro, aes(E,N), colour="black") + 
+  geom_path(data=caro, aes(E,N), colour="black") +
+  geom_point(data=caro_6, aes(E,N), colour="green") +
+  geom_path(data=caro_6, aes(E,N), colour="green")
+
+# Plot 3
+ggplot() +
+  geom_point(data=caro, aes(E,N), colour="black") + 
+  geom_path(data=caro, aes(E,N), colour="black") +
+  geom_point(data=caro_9, aes(E,N), colour="purple") +
+  geom_path(data=caro_9, aes(E,N), colour="purple")
+
+# Plot 4
+ggplot() +
+  geom_line(data=caro, aes(DatetimeUTC, speed), colour="black") +
+  geom_line(data=caro_3, aes(DatetimeUTC, speed), colour="blue") +
+  geom_line(data=caro_6, aes(DatetimeUTC, speed), colour="green") +
+  geom_line(data=caro_9, aes(DatetimeUTC, speed), colour="purple")
+
 ##########################################################
-# Task 4: Deriving Movement Parameters II: Rolling window functions
+# Task 4: Deriving Movement Parameters II: Rolling Window Functions
+
+# Rolling Window Function
+caro_RWF <- caro %>%
+  mutate(speed_5 = rollmean(caro$speed, k=5, fill=NA, align="left")) %>%
+  mutate(speed_15 = rollmean(caro$speed, k=15, fill=NA, align="left")) %>%
+  mutate(speed_30 = rollmean(caro$speed, k=30, fill=NA, align="left"))
+
+# Plot
+ggplot(caro_RWF) +
+  geom_line(aes(x=DatetimeUTC, y=speed), colour="black") +
+  geom_line(aes(x=DatetimeUTC, y=speed_5), colour="blue") +
+  geom_line(aes(x=DatetimeUTC, y=speed_15), colour="green") +
+  geom_line(aes(x=DatetimeUTC, y=speed_30), colour="purple") +
+  labs(x="Time", y="Speed (m/s)", title="Comparing speed at different sampling intervals") +
+  scale_y_continuous(limits=c(0,1)) +
+  theme_classic()
 
 
 
