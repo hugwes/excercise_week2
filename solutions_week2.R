@@ -64,10 +64,37 @@ wildschwein <- wildschwein %>%
 caro <- read_delim("caro60.csv",",")
 caro <- st_as_sf(caro, coords=c("E","N"), crs=2056, remove=FALSE)
 
+# Reduce the granularity by selecting every 3rd, 6th and 9th position 
+caro_3 <- caro %>%
+  seq(from = 1, to = 200, by = 3))
+
+
+# Calculating the timelab, steplength and speed
+caro <- caro %>%
+  mutate(
+    timelag_sec = as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs")),
+    steplength = sqrt((E-lead(E))^2+(N-lead(N))^2),
+    speed = steplength/timelag_sec)
+
+caro_3 <- caro_3 %>%
+  mutate(
+    timelag_sec = as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs")),
+    steplength = sqrt((E-lead(E))^2+(N-lead(N))^2),
+    speed = steplength/timelag_sec)
+
+caro_6 <- caro_6 %>%
+  mutate(
+    timelag_sec = as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs")),
+    steplength = sqrt((E-lead(E))^2+(N-lead(N))^2),
+    speed = steplength/timelag_sec)
+
+caro_9 <- caro_9 %>%
+  mutate(
+    timelag_sec = as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs")),
+    steplength = sqrt((E-lead(E))^2+(N-lead(N))^2),
+    speed = steplength/timelag_sec)
 
 ##########################################################
 # Task 4: Deriving movement parameters II: Rolling window functions
 
-
-# asidbsdkjbsd
 
