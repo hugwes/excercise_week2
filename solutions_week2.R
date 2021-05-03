@@ -1,6 +1,9 @@
 
 ### EXCERCISE 2 ###
 
+# Preparations
+# https://github.com/hugwes/excercise_week2 (github-link)
+
 ##########################################################
 # Load in libraries
 library(readr)        # to import tabular data (e.g. csv)
@@ -17,39 +20,40 @@ wildschwein <- st_as_sf(wildschwein, coords=c("E","N"), crs=2056, remove=FALSE)
 
 ##########################################################
 # Task 1: Getting an overview
-wildschwein <- group_by(wildschwein, TierID)
-wildschwein <- mutate(wildschwein, timelag_sec=as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs")))
-wildschwein <- mutate(wildschwein, timelag_min=as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="mins")))
-head(wildschwein)
+wildschwein <- group_by(wildschwein, TierID) %>%
+  mutate(timelag_sec = as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs"))) %>%
+  mutate(timelag_min=as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="mins")))
 
 # Plot 1
 ggplot(wildschwein, aes(DatetimeUTC, TierID)) +
   geom_point()
 
 # Plot 2
-wildschwein_count <- wildschwein %>%
-  group_by(timelag_sec) %>%
-  summarise(count = n())
-
-ggplot(wildschwein_count, aes(timelag_sec, count)) +
-  geom_bar()
+ggplot(wildschwein, aes(timelag_sec)) +
+  geom_histogram(binwidth = 50) +
+  lims(x = c(0,15000)) +
+  scale_y_log10()
 
 # Plot 3
-ggplot(wildschwein, aes(DatetimeUTC, timelag_sec, colour=TierID)) +
-  geom_point(size=0.7)
+ggplot(wildschwein, aes(DatetimeUTC, timelag_min, colour=TierID)) +
+  geom_point(size=0.7) +
+  geom_line()
+
+# How many individuals were tracked?                              3
+# For how long were the individual tracked? Are there gaps?       for one year, starting in september 2014  
+# Were all individuals tracked concurrently or sequentially?      mostly cocurrently  
+# What is the temporal sampling interval between the locations?
 
 ##########################################################
 # Task 2: Deriving movement parameters I: Speed
-E1 <- wildschwein$E                                # current location E
-E2 <- lead(wildschwein$E)                          # consecutive location E
-N1 <- wildschwein$N                                # current location N
-N2 <- lead(wildschwein$N)                          # consecutive location N
-euclidean_distance <- sqrt((E1-E2)^2+(N1-N2)^2)    # euclidean distance
 
-wildschwein <- wildschwein %>%
-  mutate(steplength = sqrt((E1-E2)^2+(N1-N2)^2))
+# euclidean distance (steplength) = sqrt((E1-E2)^2+(N1-N2)^2))
 
-###
+# E       = current location E
+# lead(E) = consecutive location E
+# N       = current location N
+# lead(N) = consecutive location N
+
 wildschwein <- wildschwein %>%
   mutate(
     steplength = sqrt((E-lead(E))^2+(N-lead(N))^2),
@@ -65,5 +69,5 @@ caro <- st_as_sf(caro, coords=c("E","N"), crs=2056, remove=FALSE)
 # Task 4: Deriving movement parameters II: Rolling window functions
 
 
-
+# asidbsdkjbsd
 
