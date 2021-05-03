@@ -1,11 +1,12 @@
 
 ### EXCERCISE 2 ###
 
+##########################################################
 # Preparations
 # https://github.com/hugwes/excercise_week2 (github-link)
 
 ##########################################################
-# Load in libraries
+# Load in Libraries
 library(readr)        # to import tabular data (e.g. csv)
 library(dplyr)        # to manipulate (tabular) data
 library(ggplot2)      # to visualize data
@@ -13,42 +14,38 @@ library(sf)           # to handle spatial vector data
 library(terra)        # To handle raster data
 library(lubridate)    # To handle dates and times
 
-##########################################################
 # Import data
 wildschwein <- read_delim("wildschwein_BE_2056.csv",",")
+
+# Convert into sf-object
 wildschwein <- st_as_sf(wildschwein, coords=c("E","N"), crs=2056, remove=FALSE)
 
 ##########################################################
-# Task 1: Getting an overview
+# Task 1: Getting an Overview
 wildschwein <- group_by(wildschwein, TierID) %>%
   mutate(timelag_sec = as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs"))) %>%
-  mutate(timelag_min=as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="mins")))
+  mutate(timelag_min=as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="mins"))) %>%
+  mutate(timelag_hours=as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="hours")))
 
 # Plot 1
 ggplot(wildschwein, aes(DatetimeUTC, TierID)) +
   geom_point()
 
 # Plot 2
-ggplot(wildschwein, aes(timelag_sec)) +
-  geom_histogram(binwidth = 50) +
-  lims(x = c(0,15000)) +
-  scale_y_log10()
+ggplot(wildschwein, aes(timelag_min)) +
+  geom_histogram(binwidth = 1) +             # Histogramm
+  lims(x = c(0,250)) +                       # X-Achsenbereich wählen
+  scale_y_log10()                            # Y-Achse logarithieren
 
 # Plot 3
 ggplot(wildschwein, aes(DatetimeUTC, timelag_min, colour=TierID)) +
   geom_point(size=0.7) +
   geom_line()
 
-# How many individuals were tracked?                              3
-# For how long were the individual tracked? Are there gaps?       for one year, starting in september 2014  
-# Were all individuals tracked concurrently or sequentially?      mostly cocurrently  
-# What is the temporal sampling interval between the locations?
-
 ##########################################################
-# Task 2: Deriving movement parameters I: Speed
+# Task 2: Deriving Movement Parameters I: Speed
 
 # euclidean distance (steplength) = sqrt((E1-E2)^2+(N1-N2)^2))
-
 # E       = current location E
 # lead(E) = consecutive location E
 # N       = current location N
@@ -60,16 +57,25 @@ wildschwein <- wildschwein %>%
     speed = steplength/timelag_sec)
 
 ##########################################################
-# Task 3: Cross-scale movement analysis
+# Task 3: Cross-scale Movement Analysis
+
+# Import Data 
 caro <- read_delim("caro60.csv",",")
+
+# Convert into sf-object
 caro <- st_as_sf(caro, coords=c("E","N"), crs=2056, remove=FALSE)
 
-# Reduce the granularity by selecting every 3rd, 6th and 9th position 
+# Reducing Granularity by Selecting every 3rd, 6th and 9th Position 
 caro_3 <- caro %>%
-  seq(from = 1, to = 200, by = 3))
+  slice(seq(from=1, to=200, by = 3))
 
+caro_6 <- caro %>%
+  slice(seq(from=1, to=200, by = 6))
 
-# Calculating the timelab, steplength and speed
+caro_9 <- caro %>%
+  slice(seq(from=1, to=200, by = 9))
+
+# Calculating timelab, steplength and speed
 caro <- caro %>%
   mutate(
     timelag_sec = as.numeric(difftime(lead(DatetimeUTC), DatetimeUTC, units="secs")),
@@ -95,6 +101,7 @@ caro_9 <- caro_9 %>%
     speed = steplength/timelag_sec)
 
 ##########################################################
-# Task 4: Deriving movement parameters II: Rolling window functions
+# Task 4: Deriving Movement Parameters II: Rolling window functions
+
 
 
