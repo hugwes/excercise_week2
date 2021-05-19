@@ -10,7 +10,7 @@
 library(readr)        # to import tabular data (e.g. csv)
 library(dplyr)        # to manipulate (tabular) data
 library(ggplot2)      # to visualize data
-library(sf)           # to handle spatial vector data
+library(sf)           # to handle spatial vector data (sf=shape file)
 library(terra)        # to handle raster data
 library(lubridate)    # to handle dates and times
 library(zoo)          # moving window functions
@@ -18,7 +18,7 @@ library(zoo)          # moving window functions
 # Import data
 wildschwein <- read_delim("wildschwein_BE_2056.csv",",")
 
-# Convert into sf-object
+# Convert into sf-object (shape file)
 wildschwein <- st_as_sf(wildschwein, coords=c("E","N"), crs=2056, remove=FALSE)
 
 ##########################################################
@@ -30,7 +30,7 @@ wildschwein <- group_by(wildschwein, TierID) %>%
 
 # Plot 1
 ggplot(wildschwein, aes(DatetimeUTC, TierID)) +
-  geom_point()
+  geom_line()
 
 # Plot 2
 ggplot(wildschwein, aes(timelag_min)) +
@@ -42,6 +42,12 @@ ggplot(wildschwein, aes(timelag_min)) +
 ggplot(wildschwein, aes(DatetimeUTC, timelag_min, colour=TierID)) +
   geom_point(size=0.7) +
   geom_line()
+
+wildschwein %>%
+  filter(year(DatetimeUTC)==2014) %>%
+  ggplot(aes(DatetimeUTC, timelag_min, colour=TierID)) +
+  geom_line() +
+  geom_point(size=0.7)
 
 ##########################################################
 # Task 2: Deriving Movement Parameters I: Speed
@@ -101,36 +107,75 @@ caro_9 <- caro_9 %>%
     steplength = sqrt((E-lead(E))^2+(N-lead(N))^2),
     speed = steplength/timelag_sec)
 
-# Plot 1
+# Plot 1 (Wesley)
 ggplot() +
-  geom_point(data=caro, aes(E,N), colour="black") + 
-  geom_path(data=caro, aes(E,N), colour="black") +
-  geom_point(data=caro_3, aes(E,N), colour="blue") +
-  geom_path(data=caro_3, aes(E,N), colour="blue")
-  
-# Plot 2
-ggplot() +
-  geom_point(data=caro, aes(E,N), colour="black") + 
-  geom_path(data=caro, aes(E,N), colour="black") +
-  geom_point(data=caro_6, aes(E,N), colour="green") +
-  geom_path(data=caro_6, aes(E,N), colour="green")
+  geom_point(data=caro, aes(E,N), alpha=0.2) + 
+  geom_path(data=caro, aes(E,N), alpha=0.2) +
+  geom_point(data=caro_3, aes(E,N)) +
+  geom_path(data=caro_3, aes(E,N)) +
+  labs(color="Trajectory", title="Comparing original with 3 minutes-resampled data")
 
-# Plot 3
+# Plot 1 (Lösung)
 ggplot() +
-  geom_point(data=caro, aes(E,N), colour="black") + 
-  geom_path(data=caro, aes(E,N), colour="black") +
-  geom_point(data=caro_9, aes(E,N), colour="purple") +
-  geom_path(data=caro_9, aes(E,N), colour="purple")
+  geom_point(data=caro, aes(E, N, colour="1 minute"), alpha = 0.2) +
+  geom_path(data=caro, aes(E, N, colour="1 minute"), alpha = 0.2) +
+  geom_point(data=caro_3, aes(E, N, colour="3 minutes")) +
+  geom_path(data=caro_3, aes(E, N, colour="3 minutes")) +
+  labs(color="Trajectory", title="Comparing original with 3 minutes-resampled data")  +
+  theme_minimal()
 
-# Plot 4
+# Plot 2 (Wesley)
+ggplot() +
+  geom_point(data=caro, aes(E,N), alpha=0.2) + 
+  geom_path(data=caro, aes(E,N), alpha=0.2) +
+  geom_point(data=caro_6, aes(E,N)) +
+  geom_path(data=caro_6, aes(E,N)) +
+  labs(color="Trajectory", title="Comparing original with 6 minutes-resampled data")
+
+# Plot 2 (Lösung)
+ggplot() +
+  geom_point(data=caro, aes(E, N, colour="1 minute"), alpha = 0.2) +
+  geom_path(data=caro, aes(E, N, colour="1 minute"), alpha = 0.2) +
+  geom_point(data=caro_3, aes(E, N, colour="6 minutes")) +
+  geom_path(data=caro_3, aes(E, N, colour="6 minutes")) +
+  labs(color="Trajectory", title="Comparing original with 6 minutes-resampled data")  +
+  theme_minimal()
+
+# Plot 3 (Wesley)
+ggplot() +
+  geom_point(data=caro, aes(E,N), alpha=0.2) + 
+  geom_path(data=caro, aes(E,N), alpha=0.2) +
+  geom_point(data=caro_9, aes(E,N)) +
+  geom_path(data=caro_9, aes(E,N)) +
+  labs(color="Trajectory", title="Comparing original with 9 minutes-resampled data")
+
+# Plot 3 (Lösung)
+ggplot() +
+  geom_point(data=caro, aes(E, N, colour="1 minute"), alpha = 0.2) +
+  geom_path(data=caro, aes(E, N, colour="1 minute"), alpha = 0.2) +
+  geom_point(data=caro_9, aes(E, N, colour="9 minutes")) +
+  geom_path(data=caro_9, aes(E, N, colour="9 minutes")) +
+  labs(color="Trajectory", title="Comparing original with 9 minutes-resampled data")  +
+  theme_minimal()
+
+# Plot 4 (Wesley)
 ggplot() +
   geom_line(data=caro, aes(DatetimeUTC, speed), colour="black") +
   geom_line(data=caro_3, aes(DatetimeUTC, speed), colour="blue") +
   geom_line(data=caro_6, aes(DatetimeUTC, speed), colour="green") +
   geom_line(data=caro_9, aes(DatetimeUTC, speed), colour="purple")
 
+# Plot 4 (Lösung)
+ggplot() +
+  geom_line(data=caro, aes(DatetimeUTC,speed, colour = "1 minute")) +
+  geom_line(data=caro_3, aes(DatetimeUTC,speed, colour = "3 minutes")) +
+  geom_line(data=caro_6, aes(DatetimeUTC,speed, colour = "6 minutes")) +
+  geom_line(data=caro_9, aes(DatetimeUTC,speed, colour = "9 minutes")) +
+  labs(x = "Time",y = "Speed (m/s)", title = "Comparing derived speed at different sampling intervals") +
+  theme_minimal()
+
 ##########################################################
-# Task 4: Deriving Movement Parameters II: Rolling Window Functions
+# Task 4: Deriving Movement Parameters II: Rolling Window Functions (Wesley)
 
 # Rolling Window Function
 caro_RWF <- caro %>%
@@ -148,5 +193,22 @@ ggplot(caro_RWF) +
   scale_y_continuous(limits=c(0,1)) +
   theme_classic()
 
+# Task 4: Deriving Movement Parameters II: Rolling Window Functions (Lösung)
+example <- rnorm(10)
+rollmean(example, k=3, fill=NA, align="left")
+rollmean(example, k=4, fill=NA, align="left")
+
+caro_x <- caro %>%
+  mutate(
+    speed3=rollmean(speed, 3, NA, align="left"),
+    speed6=rollmean(speed, 6, NA, align="left"),
+    speed9=rollmean(speed, 9, NA, align="left"))
+
+caro_x %>%
+  ggplot() +
+  geom_line(aes(DatetimeUTC, speed), colour="#E41A1C") +
+  geom_line(aes(DatetimeUTC, speed3), colour="#377EB8") +
+  geom_line(aes(DatetimeUTC, speed6), colour="#4DAF4A") +
+  geom_line(aes(DatetimeUTC, speed9), colour="#984EA3")
 
 
